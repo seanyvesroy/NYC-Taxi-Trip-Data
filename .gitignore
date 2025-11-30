@@ -1,0 +1,18 @@
+# -----------------------------------
+# Python cache / environment files
+# -----------------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+venv/
+.env
+# Ignore Parquet outputs (big binary files)
+*.parquet
+*.snappy.parquet
+*.orc
+# Ignore large raw taxi CSVs that you imported
+results_raw/
+data_raw/
