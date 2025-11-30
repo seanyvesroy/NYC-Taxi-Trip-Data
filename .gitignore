@@ -16,5 +16,8 @@ venv/
 # Ignore large raw taxi CSVs that you imported
 results_raw/
 data_raw/
-# Ignore Spark success markers
-**/_SUCCESS
+# Spark output artifacts
+_SUCCESS
+*.crc
+part-*.csv
+part-*.parquet
