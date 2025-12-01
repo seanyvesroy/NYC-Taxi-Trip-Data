@@ -9,7 +9,7 @@ df = spark.read.parquet("hdfs://localhost:9000/data/nyc/parquet_raw/")
 # Convert timestamps
 df = df.withColumn("tpep_pickup_datetime", to_timestamp("tpep_pickup_datetime")) \
        .withColumn("tpep_dropoff_datetime", to_timestamp("tpep_dropoff_datetime"))
-c
+
 # Add derived columns
 df = df.withColumn("pickup_date", to_date("tpep_pickup_datetime")) \
        .withColumn("pickup_hour", hour("tpep_pickup_datetime"))
