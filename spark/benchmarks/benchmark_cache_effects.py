@@ -27,10 +27,17 @@ def main():
 
     spark = SparkSession.builder \
         .appName("Benchmark_Cache_Effects") \
+        .config("spark.executor.memory", "4g") \
+        .config("spark.driver.memory", "4g") \
+        .config("spark.sql.shuffle.partitions", "200") \
         .getOrCreate()
 
     print("\n=== Loading cleaned parquet dataset ===")
     df = spark.read.parquet("hdfs://localhost:9000/data/nyc/parquet_clean_partitioned")
+
+    # Reduce memory footprint BEFORE benchmarking to get around memory issues
+    df = df.select("pickup_hour", "trip_distance").limit(2000000)
+
 
     # ----------------------------------------------------------------------
     # 1) Benchmark WITHOUT cache
@@ -57,17 +64,26 @@ def main():
         result = compute_aggregation(df_cached)
         return result.collect()
 
+    _, cache_fill_time = timed("Cache fill (count)", lambda: df_cached.count())
     _, time_cached = timed("Cached run", run_with_cache)
+
+
 
     # ----------------------------------------------------------------------
     # 3) Save benchmark results
     # ----------------------------------------------------------------------
     print("\nSaving benchmark results...")
 
+    #results = pd.DataFrame([
+    #    {"method": "no_cache", "seconds": time_no_cache},
+    #    {"method": "cache", "seconds": time_cached},
+    #])
+
     results = pd.DataFrame([
-        {"method": "no_cache", "seconds": time_no_cache},
-        {"method": "cache", "seconds": time_cached},
-    ])
+    {"method": "no_cache", "seconds": time_no_cache},
+    {"method": "cache_fill", "seconds": cache_fill_time},
+    {"method": "cached_second_run", "seconds": time_cached},
+])
 
     # Ensure local directory exists
     local_dir = "./results/benchmarks/cache_effects"
