@@ -13,20 +13,18 @@ def main():
     print("Computing average trip distance per hour...")
 
     result = (
-        df.groupBy("pickup_hour")   # uses the derived column from your cleaning step
+        df.groupBy("pickup_hour")  
           .agg(avg("trip_distance").alias("avg_trip_distance"))
           .orderBy("pickup_hour")
     )
 
     result.show(24)
 
-    # Save to HDFS
+
     result.write.mode("overwrite").csv(
         "hdfs://localhost:9000/data/nyc/results/avg_trip_distance_by_hour",
         header=True
     )
-
-    # Save locally (for GitHub)
     result.write.mode("overwrite").csv(
         "./results/avg_trip_distance_by_hour",
         header=True
