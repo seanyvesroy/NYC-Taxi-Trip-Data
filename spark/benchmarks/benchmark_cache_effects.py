@@ -35,23 +35,18 @@ def main():
     print("\n=== Loading cleaned parquet dataset ===")
     df = spark.read.parquet("hdfs://localhost:9000/data/nyc/parquet_clean_partitioned")
 
-    # Reduce memory footprint BEFORE benchmarking to get around memory issues
     df = df.select("pickup_hour", "trip_distance").limit(2000000)
 
 
-    # ----------------------------------------------------------------------
-    # 1) Benchmark WITHOUT cache
-    # ----------------------------------------------------------------------
+    # Without cache
     print("\nRunning WITHOUT cache...")
     def run_no_cache():
         result = compute_aggregation(df)
-        return result.collect()  # forces full execution
+        return result.collect()  
 
     _, time_no_cache = timed("No-cache run", run_no_cache)
 
-    # ----------------------------------------------------------------------
-    # 2) Benchmark WITH cache
-    # ----------------------------------------------------------------------
+    # With cache
     print("\nCaching DataFrame...")
     df_cached = df.cache()
 
@@ -68,16 +63,8 @@ def main():
     _, time_cached = timed("Cached run", run_with_cache)
 
 
-
-    # ----------------------------------------------------------------------
-    # 3) Save benchmark results
-    # ----------------------------------------------------------------------
+    # Save results
     print("\nSaving benchmark results...")
-
-    #results = pd.DataFrame([
-    #    {"method": "no_cache", "seconds": time_no_cache},
-    #    {"method": "cache", "seconds": time_cached},
-    #])
 
     results = pd.DataFrame([
     {"method": "no_cache", "seconds": time_no_cache},

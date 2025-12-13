@@ -33,17 +33,12 @@ def main():
         .appName("Benchmark_CSV_vs_Parquet") \
         .getOrCreate()
 
-    # ------------------------------------------------------------------
-    # Paths (adjust if needed)
-    # ------------------------------------------------------------------
     csv_path = "hdfs://localhost:9000/data/nyc/raw/yellow_tripdata_2016-01.csv"
     parquet_path = "hdfs://localhost:9000/data/nyc/parquet_clean_partitioned"
 
     print("\n=== Benchmark: CSV vs Parquet ===")
 
-    # ------------------------------------------------------------------
-    # 1) CSV benchmark: read CSV, derive pickup_hour, aggregate
-    # ------------------------------------------------------------------
+    # CSV Benchmark
     print("\n--- Running CSV benchmark ---")
 
     def run_csv():
@@ -57,7 +52,6 @@ def main():
         )
 
         # Derive pickup_hour from tpep_pickup_datetime
-        # Adjust column name if your schema differs
         df_csv = df_csv.withColumn(
             "pickup_hour",
             hour(col("tpep_pickup_datetime"))
@@ -65,31 +59,24 @@ def main():
 
         agg_csv = compute_aggregation(df_csv, "pickup_hour")
 
-        # Force full execution
         return agg_csv.collect()
 
     _, time_csv = timed("CSV (read + transform + aggregate)", run_csv)
 
-    # ------------------------------------------------------------------
-    # 2) Parquet benchmark: read parquet (already cleaned), aggregate
-    # ------------------------------------------------------------------
+    # Parquet Benchmark
     print("\n--- Running Parquet benchmark ---")
 
     def run_parquet():
         print(f"Reading Parquet from {parquet_path} ...")
         df_parquet = spark.read.parquet(parquet_path)
 
-        # Assumes cleaned parquet already has 'pickup_hour'
         agg_parquet = compute_aggregation(df_parquet, "pickup_hour")
 
-        # Force full execution
         return agg_parquet.collect()
 
     _, time_parquet = timed("Parquet (read + aggregate)", run_parquet)
 
-    # ------------------------------------------------------------------
-    # 3) Save benchmark results (local + HDFS)
-    # ------------------------------------------------------------------
+    # Save results
     print("\nSaving benchmark results...")
 
     results = pd.DataFrame([

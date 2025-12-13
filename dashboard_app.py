@@ -13,9 +13,8 @@ def load_single_csv(subdir: str) -> pd.DataFrame:
         raise FileNotFoundError(f"No CSV files found for pattern: {pattern}")
     return pd.read_csv(files[0])
 
-# =========================
-# LOAD ANALYTICS DATA
-# =========================
+# Load data
+
 df_distance = load_single_csv("avg_trip_distance_by_hour")
 df_tip = load_single_csv("daily_tip_percent")
 df_fare = load_single_csv("fare_by_hour")
@@ -31,16 +30,13 @@ for df in [df_distance, df_fare, df_rev_per_mile]:
 
 df_passengers["passenger_count"] = df_passengers["passenger_count"].astype(int)
 
-# =========================
-# LOAD BENCHMARK DATA
-# =========================
+
 df_cache = pd.read_csv("results/benchmarks/cache_effects/cache_benchmark.csv")
 df_format = pd.read_csv("results/benchmarks/csv_vs_parquet/csv_vs_parquet_benchmark.csv")
 df_shuffle = pd.read_csv("results/benchmarks/shuffle_partitions/shuffle_partitions_benchmark.csv")
 
-# =========================
-# BUILD ANALYTICS FIGURES
-# =========================
+# Create Figures
+
 fig_distance = px.bar(df_distance, x="pickup_hour", y="avg_trip_distance",
     title="Average Trip Distance by Pickup Hour")
 
@@ -62,9 +58,8 @@ df_duration_melt = df_duration.melt(var_name="metric", value_name="minutes")
 fig_duration = px.bar(df_duration_melt, x="metric", y="minutes",
     title="Trip Duration Statistics (Minutes)")
 
-# =========================
-# BUILD BENCHMARK FIGURES
-# =========================
+# Benchmark Figures
+
 fig_cache = px.bar(
     df_cache,
     x="method",
@@ -89,9 +84,7 @@ fig_shuffle = px.line(
     markers=True
 )
 
-# =========================
-# DASH APP
-# =========================
+#   Dash App Layout 
 app = Dash(__name__)
 
 app.layout = html.Div(
@@ -109,10 +102,8 @@ app.layout = html.Div(
 
         dcc.Tabs([
 
-            # ==========================
-            # ANALYTICS TAB
-            # ==========================
-            dcc.Tab(label="Analytics", children=[
+           # analytics tab
+           dcc.Tab(label="Analytics", children=[
                 html.Div(
                     style={"display": "grid", "gridTemplateColumns": "1fr 1fr", "gap": "20px"},
                     children=[
@@ -132,9 +123,7 @@ app.layout = html.Div(
                 )
             ]),
 
-            # ==========================
-            # BENCHMARKS TAB
-            # ==========================
+            #benchmarks tab
             dcc.Tab(label="Benchmarks", children=[
 
                 html.H2("Performance Benchmarks", style={"textAlign": "center"}),
@@ -169,9 +158,7 @@ app.layout = html.Div(
     ],
 )
 
-# =========================
-# DOWNLOAD CALLBACKS
-# =========================
+
 
 @app.callback(Output("download-cache", "data"),
     Input("btn-cache", "n_clicks"), prevent_initial_call=True)
@@ -188,8 +175,7 @@ def download_format(_):
 def download_shuffle(_):
     return dcc.send_data_frame(df_shuffle.to_csv, "shuffle_partitions.csv")
 
-# =========================
-# RUN SERVER
-# =========================
+# Run the app
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=8050)
